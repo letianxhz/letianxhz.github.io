@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="generator" content="Hugo 0.55.0-DEV with theme Tranquilpeak 0.4.3-SNAPSHOT">
+<meta name="author" content="letianxhz">
+<meta name="keywords" content="">
+<meta name="description" content="定位系统层面问题的常用方法。">
+
+
+<meta property="og:description" content="定位系统层面问题的常用方法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java系统问题追踪定位技巧">
+<meta name="twitter:title" content="java系统问题追踪定位技巧">
+<meta property="og:url" content="https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+<meta property="twitter:url" content="https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+<meta property="og:site_name" content="letianxhzs blog">
+<meta property="og:description" content="定位系统层面问题的常用方法。">
+<meta name="twitter:description" content="定位系统层面问题的常用方法。">
+<meta property="og:locale" content="en-us">
+
+  
+    <meta property="article:published_time" content="2019-02-17T00:00:00">
+  
+  
+    <meta property="article:modified_time" content="2019-02-17T00:00:00">
+  
+  
+  
+    
+      <meta property="article:section" content="java">
+    
+  
+  
+    
+      <meta property="article:tag" content="java">
+    
+  
+
+
+<meta name="twitter:card" content="summary">
+
+
+
+
+
+
+
+  <meta property="og:image" content="//d1u9biwaxjngwg.cloudfront.net/highlighted-code-showcase/peak-140.jpg">
+  <meta property="twitter:image" content="//d1u9biwaxjngwg.cloudfront.net/highlighted-code-showcase/peak-140.jpg">
+
+
+
+
+
+  <meta property="og:image" content="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=640">
+  <meta property="twitter:image" content="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=640">
+
+
+    <title>java系统问题追踪定位技巧</title>
+
+    <link rel="icon" href="https://letianxhz.github.io/favicon.png">
+    
+
+    
+
+    <link rel="canonical" href="https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/jquery.fancybox.min.css" integrity="sha256-vuXZ9LGmmwtjqFX1F+EKin1ThZMub58gKULUyf0qECk=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/helpers/jquery.fancybox-thumbs.min.css" integrity="sha256-SEa4XYAHihTcEP1f5gARTB2K26Uk8PsndQYHQC1f4jU=" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://letianxhz.github.io/css/style-nnm2spxvve8onlujjlegkkytaehyadd4ksxc1hyzzq9a2wvtrgbljqyulomn.min.css" />
+    
+    
+
+    
+      
+    
+    
+  </head>
+
+  <body>
+    <div id="blog">
+      <header id="header" data-behavior="4">
+  <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+  <div class="header-title">
+    <a class="header-title-link" href="https://letianxhz.github.io/">letianxhzs blog</a>
+  </div>
+  
+    
+      <a class="header-right-picture "
+         href="https://letianxhz.github.io/#about">
+    
+    
+    
+      
+        <img class="header-picture" src="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=90" alt="Author&#39;s picture" />
+      
+    
+    </a>
+  
+</header>
+
+      <nav id="sidebar" data-behavior="4">
+  <div class="sidebar-container">
+    
+      <div class="sidebar-profile">
+        <a href="https://letianxhz.github.io/#about">
+          <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=110" alt="Author&#39;s picture" />
+        </a>
+        <h4 class="sidebar-profile-name">letianxhz</h4>
+        
+          <h5 class="sidebar-profile-bio">一个小小的改变，往往会引起意料不到的效果</h5>
+        
+      </div>
+    
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+      
+      <span class="sidebar-button-desc">Home</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/categories">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+      
+      <span class="sidebar-button-desc">Categories</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/tags">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+      
+      <span class="sidebar-button-desc">Tags</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/archives">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
+      
+      <span class="sidebar-button-desc">Archives</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/#about">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+      
+      <span class="sidebar-button-desc">About</span>
+    </a>
+  </li>
+
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://github.com/kakawait" target="_blank" rel="noopener">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-github"></i>
+      
+      <span class="sidebar-button-desc">GitHub</span>
+    </a>
+  </li>
+
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+
+    </ul>
+  </div>
+</nav>
+
+      
+
+      <div id="main" data-behavior="4"
+        class="
+               hasCoverMetaIn
+               ">
+        <article class="post" itemscope itemType="http://schema.org/BlogPosting">
+          
+          
+            <div class="post-header main-content-wrap text-left">
+  
+    <h1 class="post-title" itemprop="headline">
+      java系统问题追踪定位技巧
+    </h1>
+  
+  
+  <div class="postShorten-meta post-meta">
+    
+      <time itemprop="datePublished" datetime="2019-02-17T00:00:00Z">
+        
+  February 17, 2019
+
+      </time>
+    
+    
+  
+  
+    <span>in</span>
+    
+      <a class="category-link" href="https://letianxhz.github.io/categories/java">java</a>
+    
+  
+
+  </div>
+
+</div>
+          
+          <div class="post-content markdown" itemprop="articleBody">
+            <div class="main-content-wrap">
+              <p><code>定位系统层面问题</code>的常用方法。</p>
+
+<h2 id="系统性能定义">系统性能定义</h2>
+
+<ul>
+<li>Throughout 吞吐量 （系统每秒钟可以处理的请求数）</li>
+<li>Latency 延迟 （系统处理一个请求的延迟）</li>
+<li>Usage 资源利用率</li>
+</ul>
+
+<h3 id="吞吐量和延迟的关系">吞吐量和延迟的关系</h3>
+
+<ul>
+<li>吞吐量越高，延迟会越大。因为请求量过大，系统太繁忙，所以响应时间会降低。</li>
+<li>延迟越小，能支持的吞吐量会越高。因为延迟短说明处理速度快，就可以处理更多的请求。</li>
+<li><code>异步化可以提高系统的吞吐量的灵活性，但是不会获得更快的响应时间。</code></li>
+</ul>
+
+<h2 id="系统性能压测的常用工具">系统性能压测的常用工具</h2>
+
+<h3 id="tcpdump">tcpdump</h3>
+
+<h4 id="1-常用参数">1. 常用参数：</h4>
+
+<pre><code>-i：指定需要的网
+-s：抓取数据包时默认抓取长度为68字节，加上-s 0后可以抓到完整的数据包
+-w：监听的数据包写入指定的文件
+</code></pre>
+
+<h4 id="2-示例">2. 示例</h4>
+
+<pre><code>tcpdump -i eth1 host 10.1.1.1  // 抓取所有经过eth1，目的或源地址是10.1.1.1的网络数据包 
+
+tcpdump -i eth1 src host 10.1.1.1  // 源地址
+
+tcpdump -i eth1 dst host 10.1.1.1  // 目的地址
+</code></pre>
+
+<p>如果想使用wireshark分析tcpdump的包，需要加上是 -s 参数：</p>
+
+<pre><code>tcpdump -i eth0 tcp and port 80 -s 0 -w traffic.pcap
+</code></pre>
+
+<h3 id="tcpcopy-线上引流压测">tcpcopy——线上引流压测</h3>
+
+<p>tcpcopy是一种请求复制工具，用于实时和离线回放，它可以将线上流量拷贝到测试机器，实时模拟线上的真实环境，达到程序不上线的情况下承担线上真实流量的测试。实战演习的必备工具。</p>
+
+<h4 id="a-tcpdump录制pace文件">a. tcpdump录制pace文件</h4>
+
+<pre><code>tcpdump -i eth0 -w online.pcap tcp and port 80
+</code></pre>
+
+<h4 id="b-流量回放">b. 流量回放</h4>
+
+<pre><code>tcpcopy -x 80-10.1.x.x:80 -i traffic.pcap
+	
+tcpcopy -x 80-10.1.x.x:80 -a 2 -i traffic.pcap  // 离线回放加速2倍
+</code></pre>
+
+<h4 id="c-引流模式">c. 引流模式</h4>
+
+<pre><code>tcpcopy -x 80-10.1.x.x:80 -r 20  // 20%引流
+	
+tcpcopy -x 80-10.1.x.x:80 -n 3  // 放大三倍引流
+</code></pre>
+
+<h3 id="wrk-apachebench-jmeter-webbench">wrk &amp; ApacheBench &amp; Jmeter &amp; webbench</h3>
+
+<p>个人非常推荐wrk，轻量且压测结果准确，结合Lua脚本可以支持更复杂的测试场景。</p>
+
+<p>压测示例：4个线程来模拟1000个并发连接，整个测试持续30秒，连接超时30秒，打印出请求的延迟统计信息。</p>
+
+<pre><code>&gt; wrk -t4 -c1000 -d30s -T30s --latency http://www.baidu.com
+
+Running 30s test @ http://www.baidu.com
+  4 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.71s     3.19s   26.51s    89.38%
+    Req/Sec    15.83     10.59    60.00     66.32%
+  Latency Distribution
+     50%  434.52ms
+     75%    1.70s
+     90%    5.66s
+     99%   14.38s
+  1572 requests in 30.09s, 26.36MB read
+Requests/sec:     52.24
+Transfer/sec:      0.88MB
+</code></pre>
+
+<p>更多参数帮助信息：</p>
+
+<pre><code>&gt; wrk --help
+
+Usage: wrk &lt;options&gt; &lt;url&gt;
+  Options:
+    -c, --connections &lt;N&gt;  Connections to keep open
+    -d, --duration    &lt;T&gt;  Duration of test
+    -t, --threads     &lt;N&gt;  Number of threads to use
+
+    -s, --script      &lt;S&gt;  Load Lua script file
+    -H, --header      &lt;H&gt;  Add header to request
+        --latency          Print latency statistics
+        --timeout     &lt;T&gt;  Socket/request timeout
+    -v, --version          Print version details
+
+  Numeric arguments may include a SI unit (1k, 1M, 1G)
+  Time arguments may include a time unit (2s, 2m, 2h)
+</code></pre>
+
+<h2 id="定位性能瓶颈">定位性能瓶颈</h2>
+
+<p>可以从以下几个方面衡量系统的性能：</p>
+
+<ul>
+<li>应用层面</li>
+<li>系统层面</li>
+<li>JVM层面</li>
+<li>Profiler</li>
+</ul>
+
+<h3 id="应用层面">应用层面</h3>
+
+<p>应用层面的性能指标：</p>
+
+<ul>
+<li>QPS</li>
+<li>响应时间，95、99线等。</li>
+<li>成功率</li>
+</ul>
+
+<h3 id="系统层面">系统层面</h3>
+
+<p>系统层面指标有Cpu、内存、磁盘、网路等，推荐用一个犀利的命令查询系统性能情况：</p>
+
+<pre><code>dstat -lcdngy
+</code></pre>
+
+<p><img src="http://wangyapu.iocoder.cn/14993638978642.jpg" alt="img" /></p>
+
+<p>dstat非常强大，可以实时的监控cpu、磁盘、网络、IO、内存等使用情况。</p>
+
+<ul>
+<li><p>安装方法</p>
+
+<pre><code>yum install -y dstat
+</code></pre></li>
+
+<li><p>功能说明</p>
+
+<pre><code>-c：显示CPU系统占用，用户占用，空闲，等待，中断，软件中断等信息。
+-C：当有多个CPU时候，此参数可按需分别显示cpu状态，例：-C 0,1 是显示cpu0和cpu1的信息。 
+-d：显示磁盘读写数据大小。 -D hda,total：include hda and total。 
+-n：显示网络状态。 -N eth1,total：有多块网卡时，指定要显示的网卡。 
+-l：显示系统负载情况。 
+-m：显示内存使用情况。 
+-g：显示页面使用情况。 
+-p：显示进程状态。 
+-s：显示交换分区使用情况。 
+-S：类似D/N。 
+-r：I/O请求情况。 
+-y：系统状态。 
+--ipc：显示ipc消息队列，信号等信息。 
+--socket：用来显示tcp udp端口状态。 
+-a：此为默认选项，等同于-cdngy。 
+-v：等同于 -pmgdsc -D total。 
+--output 文件：此选项也比较有用，可以把状态信息以csv的格式重定向到指定的文件中，以便日后查看。例：dstat --output /root/dstat.csv &amp; 此时让程序默默的在后台运行并把结果输出到/root/dstat.csv文件中。	
+</code></pre></li>
+</ul>
+
+<h4 id="cpu">Cpu</h4>
+
+<ul>
+<li>使用率：Cpu是最重要的资源，如果CPU在等待，也会导致Cpu高使用率。</li>
+</ul>
+
+<p><code>CPU利用率 = 1 - 程序占用cpu时间/程序总的运行时间</code></p>
+
+<ul>
+<li>用户时间/内核时间：大致判断应用是计算密集型还是IO密集型。</li>
+</ul>
+
+<p>CPU花在用户态代码的时间称为用户时间，而执行内核态代码的时间称为内核时间。内核时间主要包括系统调用，内核线程和中断的时间。当在整个系统范围内进行测量时，用户时间和内核时间之比揭示了运行的负载类型。计算密集型应用会把大量时间花在用户态代码上，用户时间/内核时间之比接近99/1。这样的例子有图像处理，数据分析等。I/O密集型应用的系统调用频率较高，通过执行内核代码进行I/O操作。一个进行网络I/O的Web服务器的用户/内核时间比大约为70/30。</p>
+
+<ul>
+<li>负载load：在特定时间间隔内运行队列中的平均进程数。每个CPU都有一个运行队列，队列里存放着已经就绪，等待被CPU执行的线程。<code>理想状态下，希望负载平均值小于等于Cpu核数。</code></li>
+</ul>
+
+<p><img src="http://wangyapu.iocoder.cn/14993645363499.jpg" alt="img" /></p>
+
+<p>Cpu使用率和load的区别：</p>
+
+<ul>
+<li>负载均值用来估量CPU利用率的发展趋势，而不是某一时刻的状况。</li>
+<li>负载均值包括所有CPU的需求，而不仅仅是在测量时活跃的。</li>
+</ul>
+
+<h4 id="磁盘">磁盘</h4>
+
+<p>磁盘空间：没有空间会导致程序无法启动或者报错。</p>
+
+<pre><code>du -sh //查看当前文件夹下所有文件大小
+
+df -hl //以磁盘分区为单位查看文件系统
+</code></pre>
+
+<p>有时候linux服务器的系统日志文件过大导致磁盘使用率过高，推荐两种清理方式：</p>
+
+<pre><code>sudo /dev/null &gt; /var/log/**.log  //删除指定的较大日志文件，速度快
+sudo find /var/log/ -type f -mtime +30 -exec rm -f {} \  //删除30天之前的日志文件
+</code></pre>
+
+<p>磁盘权限：没有权限会导致程序无法启动或者报错。</p>
+
+<pre><code>ll /yourdir
+</code></pre>
+
+<p>磁盘性能测试</p>
+
+<pre><code>dd if=/dev/zero of=output.file bs=10M count=1
+</code></pre>
+
+<p>io吞吐、iowait</p>
+
+<p>这里重点说下这两个因素，大量的磁盘读写以及过高的iowait往往意味着磁盘可能是瓶颈。实际上iowait并不能反映磁盘成为性能瓶颈，它实际测量的是cpu的时间：</p>
+
+<pre><code>%iowait = (cpu idle time)/(all cpu time)
+</code></pre>
+
+<p>所以<code>唯一定位磁盘成为性能瓶颈的直接方法还是看read/write时间</code>。下面我们着重介绍下如何定位io问题。</p>
+
+<p>a. 宏观确定是否是io的问题：top命令，可以从Cpu这一行看出浪费在I/O Wait上的CPU百分比；数值越高代表越多的CPU资源在等待I/O权限。</p>
+
+<p><img src="http://wangyapu.iocoder.cn/14995881340181.jpg" alt="img" /></p>
+
+<p>b. 确定具体磁盘问题：iostat</p>
+
+<p><img src="http://wangyapu.iocoder.cn/14997890287955.jpg" alt="img" /></p>
+
+<p>%util直观地反应可哪一块磁盘正在被写入，反应了设备的繁忙程度。每毫秒读写请求(rrqm/s wrqm/s)以及每秒读写(r/s w/s)对排查问题也提供了很多有用的信息。</p>
+
+<p>c. 确定具体进程：简单粗暴的iotop直观地反映了哪些进程是导致io问题的罪魁祸首。</p>
+
+<p><img src="http://wangyapu.iocoder.cn/14997895654710.jpg" alt="img" /></p>
+
+<p>d. ps判断进程是否等待IO一样强大</p>
+
+<p>众所周知，ps命令为我们提供了内存、cpu以及进程状态等信息，根据进程状态可以很容易查到正在等待IO的进程信息。</p>
+
+<p>这里简单说下linux进程的几种状态：</p>
+
+<ul>
+<li>R (TASK_RUNNING)，可执行状态。</li>
+<li>S (TASK_INTERRUPTIBLE)，可中断的睡眠状态。</li>
+<li>D (TASK_UNINTERRUPTIBLE)，不可中断的睡眠状态。</li>
+<li>T (TASK_STOPPED or TASK_TRACED)，暂停状态或跟踪状态。</li>
+<li>Z (TASK_DEAD – EXIT_ZOMBIE)，退出状态，进程成为僵尸进程。</li>
+<li>X (TASK_DEAD – EXIT_DEAD)，退出状态，进程即将被销毁。</li>
+</ul>
+
+<p>其中等待I/O的进程状态一般是”uninterruptible sleep”即D状态，<code>D状态以及R状态进程算为运行队列之中</code>，所以D状态进程过多也会导致系统load偏高，有兴趣可以看下linux load的计算原理。</p>
+
+<p>查看D状态进程：</p>
+
+<pre><code>&gt; for x in `seq 1 1 10`; do ps -eo state,pid,cmd | grep &quot;^D&quot;; echo &quot;--------&quot;; sleep 5; done D 13389 /usr/libexec/gcc/x86_64-redhat-linux/4.4.7/cc1 -quiet -I../../include/cat -I../ -I. -dD message_sender.c -quiet -dumpbase message_sender.c -mtune=generic -auxbase message_sender -ggdb3 -O2 -O0 -o /tmp/ccivsNPE.s
+</code></pre>
+
+<p>根据proc伪文件系统获取io相关信息：</p>
+
+<pre><code>&gt; cat /proc/pid/io
+
+rchar: 548875497
+wchar: 270446556
+syscr: 452342
+syscw: 143986
+read_bytes: 253100032
+write_bytes: 24645632
+cancelled_write_bytes: 3801088
+</code></pre>
+
+<p>e. 确定哪个文件频繁读写：lsof -p pid</p>
+
+<p><img src="http://wangyapu.iocoder.cn/14997929213911.jpg" alt="img" /></p>
+
+<h4 id="网络">网络</h4>
+
+<h5 id="1-nestat">1. nestat</h5>
+
+<p>netstat -nt 查看tcp相关连接状态、连接数以及发送队列和接收队列</p>
+
+<p><img src="http://wangyapu.iocoder.cn/15003685864974.jpg" alt="img" /></p>
+
+<p>关于tcp的状态需要大家熟悉三次握手和四次挥手的过程，这里先列出tcp的全部状态。</p>
+
+<pre><code>客户端：SYN_SENT、FIN_WAIT1、FIN_WAIT2、CLOSING、TIME_WAIT
+
+服务端：LISTEN、SYN_RCVD、CLOSE_WAIT、LAST_ACK
+
+Common：ESTABLISHED、CLOSED
+</code></pre>
+
+<p>Tcp状态变化图（摘自网络）：</p>
+
+<p><img src="http://wangyapu.iocoder.cn/15328858482257.jpg" alt="img" /></p>
+
+<p>关于tcp状态的几点说明：</p>
+
+<ul>
+<li>正常的连接应该是ESTABLISHED状态，如果存在大量的SYN_SENT的连接，则需要看下防火墙规则。</li>
+<li><code>如果Recv-Q或者Send-Q持续有大量包存在，意味着连接存在瓶颈或者程序存在bug。</code></li>
+</ul>
+
+<h5 id="2-一些其他常用技巧">2. 一些其他常用技巧</h5>
+
+<p>关于netstat还有很多有用的技巧，这里列出平时比较常用的：</p>
+
+<pre><code>netstat -nap | grep port 显示使用该端口的所有进程id
+    
+netstat -nat |awk '{print $6}'|sort|uniq -c|sort -rn 查询全部状态并排序
+    
+awk '{print $1}' access.log |sort|uniq -c|sort -nr|head -10 分析access.log获取访问做多的top n的ip地址
+    
+netstat -nat | grep &quot;10.1.1.1:8080&quot; |awk '{print $5}'|awk -F: '{print $1}'|sort|uniq -c|sort -nr|head -20 连接某服务器最多的top n的ip地址
+    
+netstat -s 如果重传的包持续增加，那么很大可能网卡存在问题
+</code></pre>
+
+<h3 id="jvm">JVM</h3>
+
+<h4 id="定位问题的杀手锏-线程堆栈">定位问题的杀手锏——线程堆栈</h4>
+
+<h5 id="1-获取线程堆栈的步骤">1. 获取线程堆栈的步骤：</h5>
+
+<pre><code>ps -ef | grep java
+sudo -u nobody jstack &lt;pid&gt; &gt; /tmp/jstack.&lt;pid&gt;
+小技巧：jstack信息是某个时刻的堆栈信息，有时间仅仅一个jstack并不能分析出问题所在，可以适当多几次jstack，然后进行对比分析。
+</code></pre>
+
+<h5 id="2-如何从线程堆栈中找到本地线程对应的id">2. 如何从线程堆栈中找到本地线程对应的id</h5>
+
+<p><img src="http://wangyapu.iocoder.cn/15017782465588.jpg" alt="img" /></p>
+
+<p>nid=native thread id，特殊的是nid使用十六进制标识，本地线程id是十进制标识，所以通过进制换算就可以讲两者对应起来。</p>
+
+<p>16进制和10进制的互换：</p>
+
+<pre><code>printf %d 0x1b40
+printf &quot;0x%x&quot; 6976
+</code></pre>
+
+<h5 id="3-cpu消耗高的分析方法">3. Cpu消耗高的分析方法</h5>
+
+<p>a. 找出对应的java进程pid：</p>
+
+<pre><code>ps -ef | grep java
+</code></pre>
+
+<p>b. 找出java进程中最消耗cpu的线程：</p>
+
+<pre><code>top -H -p &lt;pid&gt;
+</code></pre>
+
+<ul>
+<li>将找出的线程id转换为16进制</li>
+<li>jstack获取java的线程堆栈</li>
+
+<li><p>根据16进制的id从线程堆栈中找到相关的堆栈信息</p>
+
+<pre><code>说明：线程堆栈中可以看出对应线程执行的是Java代码还是Native method
+</code></pre></li>
+</ul>
+
+<p>找不到对应的线程堆栈？</p>
+
+<ul>
+<li>执行的Native method是重新创建的线程。</li>
+<li>代码bug，堆内存耗完，jvm不断执行full gc。</li>
+<li>jvm自身bug😂。</li>
+</ul>
+
+<h4 id="垃圾收集的统计信息-查看gc原因">垃圾收集的统计信息——查看Gc原因</h4>
+
+<p>jstat -gccause用于查看垃圾收集的统计信息，若有发生垃圾回收，还会显示最后一次以及当前发生垃圾回收的原因，它比-gcutil会多出最后一次垃圾回收的原因以及当前正在发生的垃圾回收的原因。</p>
+
+<pre><code>jstat -gccause pid 1234
+</code></pre>
+              
+            </div>
+          </div>
+          <div id="post-footer" class="post-footer main-content-wrap">
+            
+              
+                
+                
+                  <div class="post-footer-tags">
+                    <span class="text-color-light text-small">TAGGED IN</span><br/>
+                    
+  <a class="tag tag--primary tag--small" href="https://letianxhz.github.io/tags/java/">java</a>
+
+                  </div>
+                
+              
+            
+            <div class="post-actions-wrap">
+  
+      <nav >
+        <ul class="post-actions post-action-nav">
+          
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--disabled">
+              
+                  <i class="fa fa-angle-left"></i>
+                  <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+                </a>
+            </li>
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/" data-tooltip="skynet 学习笔记 - 服务器启动流程">
+              
+                  <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+                  <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+          
+        </ul>
+      </nav>
+    <ul class="post-actions post-action-share" >
+      
+        <li class="post-action hide-lg hide-md hide-sm">
+          <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+            <i class="fa fa-share-alt"></i>
+          </a>
+        </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+              <i class="fa fa-facebook-official"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        
+      
+      
+        <li class="post-action">
+          <a class="post-action-btn btn btn--default" href="#disqus_thread">
+            <i class="fa fa-comment-o"></i>
+          </a>
+        </li>
+      
+      <li class="post-action">
+        
+          <a class="post-action-btn btn btn--default" href="#">
+        
+          <i class="fa fa-list"></i>
+        </a>
+      </li>
+    </ul>
+  
+</div>
+
+            
+              
+                <div id="disqus_thread">
+  <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+              
+            
+          </div>
+        </article>
+        <footer id="footer" class="main-content-wrap">
+  <span class="copyrights">
+    &copy; 2019 letianxhz. All Rights Reserved
+  </span>
+</footer>
+
+      </div>
+      <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+        <div class="post-actions-wrap">
+  
+      <nav >
+        <ul class="post-actions post-action-nav">
+          
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--disabled">
+              
+                  <i class="fa fa-angle-left"></i>
+                  <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+                </a>
+            </li>
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/" data-tooltip="skynet 学习笔记 - 服务器启动流程">
+              
+                  <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+                  <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+          
+        </ul>
+      </nav>
+    <ul class="post-actions post-action-share" >
+      
+        <li class="post-action hide-lg hide-md hide-sm">
+          <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+            <i class="fa fa-share-alt"></i>
+          </a>
+        </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+              <i class="fa fa-facebook-official"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        
+      
+      
+        <li class="post-action">
+          <a class="post-action-btn btn btn--default" href="#disqus_thread">
+            <i class="fa fa-comment-o"></i>
+          </a>
+        </li>
+      
+      <li class="post-action">
+        
+          <a class="post-action-btn btn btn--default" href="#">
+        
+          <i class="fa fa-list"></i>
+        </a>
+      </li>
+    </ul>
+  
+</div>
+
+      </div>
+      <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+  <i id="btn-close-shareoptions" class="fa fa-close"></i>
+  <ul class="share-options">
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fletianxhz.github.io%2F2019%2F02%2Fjava%25E7%25B3%25BB%25E7%25BB%259F%25E9%2597%25AE%25E9%25A2%2598%25E8%25BF%25BD%25E8%25B8%25AA%25E5%25AE%259A%25E4%25BD%258D%25E6%258A%2580%25E5%25B7%25A7%2F">
+          <i class="fa fa-facebook-official"></i><span>Share on Facebook</span>
+        </a>
+      </li>
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=https%3A%2F%2Fletianxhz.github.io%2F2019%2F02%2Fjava%25E7%25B3%25BB%25E7%25BB%259F%25E9%2597%25AE%25E9%25A2%2598%25E8%25BF%25BD%25E8%25B8%25AA%25E5%25AE%259A%25E4%25BD%258D%25E6%258A%2580%25E5%25B7%25A7%2F">
+          <i class="fa fa-twitter"></i><span>Share on Twitter</span>
+        </a>
+      </li>
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=https%3A%2F%2Fletianxhz.github.io%2F2019%2F02%2Fjava%25E7%25B3%25BB%25E7%25BB%259F%25E9%2597%25AE%25E9%25A2%2598%25E8%25BF%25BD%25E8%25B8%25AA%25E5%25AE%259A%25E4%25BD%258D%25E6%258A%2580%25E5%25B7%25A7%2F">
+          <i class="fa fa-google-plus"></i><span>Share on Google&#43;</span>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+<div id="share-options-mask" class="share-options-mask"></div>
+    </div>
+    
+    <div id="about">
+  <div id="about-card">
+    <div id="about-btn-close">
+      <i class="fa fa-remove"></i>
+    </div>
+    
+      <img id="about-card-picture" src="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=110" alt="Author&#39;s picture" />
+    
+    <h4 id="about-card-name">letianxhz</h4>
+    
+      <div id="about-card-bio">一个小小的改变，往往会引起意料不到的效果</div>
+    
+    
+    
+      <div id="about-card-location">
+        <i class="fa fa-map-marker"></i>
+        <br/>
+        China
+      </div>
+    
+  </div>
+</div>
+
+    <div id="algolia-search-modal" class="modal-container">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="close-button"><i class="fa fa-close"></i></span>
+      <a href="https://algolia.com" target="_blank" rel="noopener" class="searchby-algolia text-color-light link-unstyled">
+        <span class="searchby-algolia-text text-color-light text-small">by</span>
+        <img class="searchby-algolia-logo" src="https://www.algolia.com/static_assets/images/press/downloads/algolia-light.svg">
+      </a>
+      <i class="search-icon fa fa-search"></i>
+      <form id="algolia-search-form">
+        <input type="text" id="algolia-search-input" name="search"
+          class="form-control input--large search-input" placeholder="Search" />
+      </form>
+    </div>
+    <div class="modal-body">
+      <div class="no-result text-color-light text-center">no post found</div>
+      <div class="results">
+        
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+                <h3 class="media-heading">java系统问题追踪定位技巧</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Feb 2, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p><code>定位系统层面问题</code>的常用方法。</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+                <h3 class="media-heading">skynet 学习笔记 - 服务器启动流程</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>主要介绍下skynet在打包完成后，启动时内部的执行流程是怎样的，从底层C代码到上层lua是如何运转的。首先看Skynet_main.c的代码</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6/">
+                <h3 class="media-heading">skynet 学习笔记 - 消息队列的实现机制</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>skynet是一个基于C跟lua的开源服务端并发框架，实现了Actor模型，
+gate是模板lualib/snax/gateserver.lua使用范例，系统自带的，位于service/gate.lua，是一个实现完整的网关服务器。</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/">
+                <h3 class="media-heading">skynet 学习笔记 - 源码学习</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">skynet是一个基于C跟lua的开源服务端并发框架，实现了Actor模型， gate是模板lualib/snax/gateserver.lua使用范例，系统自带的，位于service/gate.lua，是一个实现完整的网关服务器。</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/06/welcome-to-tranquilpeak-0.4.4-beta/">
+                <h3 class="media-heading">Welcome to Tranquilpeak 0.4.4-BETA</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jun 6, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Tranquilpeak is a gorgeous responsive theme for Hugo blog framework. It has many features and integrated services to improve user experience.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/06/who-is-using-tranquilpeak-hugo-theme/">
+                <h3 class="media-heading">Who&#39;s using Tranquilpeak Hugo Theme</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jun 6, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Here you can find a list of the blogs that use Tranquilpeak theme, with different styles and customizations.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/05/elements-showcase/">
+                <h3 class="media-heading">Elements showcase</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  May 5, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Check out how Tranquilpeak theme display well HTML elements (title, paragraph, blockquote, table and more..). It&rsquo;s simple and elegant.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/05/cover-image-showcase/">
+                <h3 class="media-heading">Cover image showcase</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  May 5, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Tranquilpeak integrate a unique &ldquo;cover image&rdquo; feature. Open this post to see how this feature sublimate your article.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/03/highlighted-code-showcase/">
+                <h3 class="media-heading">highlighted code showcase</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Mar 3, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Tranquilpeak Hugo theme have its own theme to highlight source code. It&rsquo;s based on GitHub theme: simple and elegant. Check out how it sublimate source codes.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2014/10/tags-plugins-showcase/">
+                <h3 class="media-heading">Tags plugins showcase</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Oct 10, 2014
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>This post is used to show how tag plugins are displayed. See <a href="https://github.com/kakawait/hugo-tranquilpeak-theme/blob/master/docs/user.md#tags">docs</a> for more info.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+      </div>
+    </div>
+    <div class="modal-footer">
+      <p class="results-count text-medium"
+         data-message-zero="no post found"
+         data-message-one="1 post found"
+         data-message-other="{n} posts found">
+         16 posts found
+      </p>
+    </div>
+  </div>
+</div>
+    
+  
+    
+    <div id="cover" style="background-image:url('https://letianxhz.github.io/images/cover.jpg');"></div>
+  
+
+
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.7/js/jquery.fancybox.min.js" integrity="sha256-GEAnjcTqVP+vBp3SSc8bEDQqvWAZMiHyUSIorrWwH50=" crossorigin="anonymous"></script>
+
+
+<script src="https://letianxhz.github.io/js/script-qi9wbxp2ya2j6p7wx1i6tgavftewndznf4v0hy2gvivk1rxgc3lm7njqb6bz.min.js"></script>
+
+
+<script lang="javascript">
+window.onload = updateMinWidth;
+window.onresize = updateMinWidth;
+document.getElementById("sidebar").addEventListener("transitionend", updateMinWidth);
+function updateMinWidth() {
+  var sidebar = document.getElementById("sidebar");
+  var main = document.getElementById("main");
+  main.style.minWidth = "";
+  var w1 = getComputedStyle(main).getPropertyValue("min-width");
+  var w2 = getComputedStyle(sidebar).getPropertyValue("width");
+  var w3 = getComputedStyle(sidebar).getPropertyValue("left");
+  main.style.minWidth = `calc(${w1} - ${w2} - ${w3})`;
+}
+</script>
+
+<script>
+$(document).ready(function() {
+  hljs.configure({ classPrefix: '', useBR: false });
+  $('pre.code-highlight > code, pre > code').each(function(i, block) {
+    if (!$(this).hasClass('codeblock')) {
+      $(this).addClass('codeblock');
+    }
+    hljs.highlightBlock(block);
+  });
+});
+</script>
+
+
+  
+    
+      <script>
+        var disqus_config = function () {
+          this.page.url = 'https:\/\/letianxhz.github.io\/2019\/02\/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7\/';
+          
+            this.page.identifier = '\/2019\/02\/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7\/'
+          
+        };
+        (function() {
+          
+          
+          if (window.location.hostname == "localhost") {
+            return;
+          }
+          var d = document, s = d.createElement('script');
+          var disqus_shortname = 'hugo-tranquilpeak-theme';
+          s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+        })();
+      </script>
+    
+  
+
+
+
+
+    
+  </body>
+</html>
+

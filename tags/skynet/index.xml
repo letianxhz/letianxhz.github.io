@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Skynet on letianxhzs blog</title>
+    <link>https://letianxhz.github.io/tags/skynet/</link>
+    <description>Recent content in Skynet on letianxhzs blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 11 Jan 2019 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://letianxhz.github.io/tags/skynet/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>skynet 学习笔记 - 服务器启动流程</title>
+      <link>https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</link>
+      <pubDate>Fri, 11 Jan 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</guid>
+      <description>&lt;p&gt;主要介绍下skynet在打包完成后，启动时内部的执行流程是怎样的，从底层C代码到上层lua是如何运转的。首先看Skynet_main.c的代码&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>skynet 学习笔记 - 消息队列的实现机制</title>
+      <link>https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6/</link>
+      <pubDate>Fri, 11 Jan 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6/</guid>
+      <description>&lt;p&gt;skynet是一个基于C跟lua的开源服务端并发框架，实现了Actor模型，
+gate是模板lualib/snax/gateserver.lua使用范例，系统自带的，位于service/gate.lua，是一个实现完整的网关服务器。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>skynet 学习笔记 - 源码学习</title>
+      <link>https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</link>
+      <pubDate>Fri, 11 Jan 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/</guid>
+      <description>skynet是一个基于C跟lua的开源服务端并发框架，实现了Actor模型， gate是模板lualib/snax/gateserver.lua使用范例，系统自带的，位于service/gate.lua，是一个实现完整的网关服务器。</description>
+    </item>
+    
+  </channel>
+</rss>

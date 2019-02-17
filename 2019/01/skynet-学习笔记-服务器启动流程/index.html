@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="generator" content="Hugo 0.55.0-DEV with theme Tranquilpeak 0.4.3-SNAPSHOT">
+<meta name="author" content="letianxhz">
+<meta name="keywords" content="">
+<meta name="description" content="主要介绍下skynet在打包完成后，启动时内部的执行流程是怎样的，从底层C代码到上层lua是如何运转的。首先看Skynet_main.c的代码">
+
+
+<meta property="og:description" content="主要介绍下skynet在打包完成后，启动时内部的执行流程是怎样的，从底层C代码到上层lua是如何运转的。首先看Skynet_main.c的代码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="skynet 学习笔记 - 服务器启动流程">
+<meta name="twitter:title" content="skynet 学习笔记 - 服务器启动流程">
+<meta property="og:url" content="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+<meta property="twitter:url" content="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+<meta property="og:site_name" content="letianxhzs blog">
+<meta property="og:description" content="主要介绍下skynet在打包完成后，启动时内部的执行流程是怎样的，从底层C代码到上层lua是如何运转的。首先看Skynet_main.c的代码">
+<meta name="twitter:description" content="主要介绍下skynet在打包完成后，启动时内部的执行流程是怎样的，从底层C代码到上层lua是如何运转的。首先看Skynet_main.c的代码">
+<meta property="og:locale" content="en-us">
+
+  
+    <meta property="article:published_time" content="2019-01-11T00:00:00">
+  
+  
+    <meta property="article:modified_time" content="2019-01-11T00:00:00">
+  
+  
+  
+    
+      <meta property="article:section" content="skynet">
+    
+  
+  
+    
+      <meta property="article:tag" content="skynet">
+    
+  
+
+
+<meta name="twitter:card" content="summary">
+
+
+
+
+
+
+
+  <meta property="og:image" content="//d1u9biwaxjngwg.cloudfront.net/highlighted-code-showcase/peak-140.jpg">
+  <meta property="twitter:image" content="//d1u9biwaxjngwg.cloudfront.net/highlighted-code-showcase/peak-140.jpg">
+
+
+
+
+
+  <meta property="og:image" content="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=640">
+  <meta property="twitter:image" content="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=640">
+
+
+    <title>skynet 学习笔记 - 服务器启动流程</title>
+
+    <link rel="icon" href="https://letianxhz.github.io/favicon.png">
+    
+
+    
+
+    <link rel="canonical" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/jquery.fancybox.min.css" integrity="sha256-vuXZ9LGmmwtjqFX1F+EKin1ThZMub58gKULUyf0qECk=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/helpers/jquery.fancybox-thumbs.min.css" integrity="sha256-SEa4XYAHihTcEP1f5gARTB2K26Uk8PsndQYHQC1f4jU=" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://letianxhz.github.io/css/style-nnm2spxvve8onlujjlegkkytaehyadd4ksxc1hyzzq9a2wvtrgbljqyulomn.min.css" />
+    
+    
+
+    
+      
+    
+    
+  </head>
+
+  <body>
+    <div id="blog">
+      <header id="header" data-behavior="4">
+  <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+  <div class="header-title">
+    <a class="header-title-link" href="https://letianxhz.github.io/">letianxhzs blog</a>
+  </div>
+  
+    
+      <a class="header-right-picture "
+         href="https://letianxhz.github.io/#about">
+    
+    
+    
+      
+        <img class="header-picture" src="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=90" alt="Author&#39;s picture" />
+      
+    
+    </a>
+  
+</header>
+
+      <nav id="sidebar" data-behavior="4">
+  <div class="sidebar-container">
+    
+      <div class="sidebar-profile">
+        <a href="https://letianxhz.github.io/#about">
+          <img class="sidebar-profile-picture" src="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=110" alt="Author&#39;s picture" />
+        </a>
+        <h4 class="sidebar-profile-name">letianxhz</h4>
+        
+          <h5 class="sidebar-profile-bio">一个小小的改变，往往会引起意料不到的效果</h5>
+        
+      </div>
+    
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+      
+      <span class="sidebar-button-desc">Home</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/categories">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+      
+      <span class="sidebar-button-desc">Categories</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/tags">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+      
+      <span class="sidebar-button-desc">Tags</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/archives">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
+      
+      <span class="sidebar-button-desc">Archives</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://letianxhz.github.io/#about">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+      
+      <span class="sidebar-button-desc">About</span>
+    </a>
+  </li>
+
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://github.com/kakawait" target="_blank" rel="noopener">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-github"></i>
+      
+      <span class="sidebar-button-desc">GitHub</span>
+    </a>
+  </li>
+
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+
+    </ul>
+  </div>
+</nav>
+
+      
+
+      <div id="main" data-behavior="4"
+        class="
+               hasCoverMetaIn
+               ">
+        <article class="post" itemscope itemType="http://schema.org/BlogPosting">
+          
+          
+            <div class="post-header main-content-wrap text-left">
+  
+    <h1 class="post-title" itemprop="headline">
+      skynet 学习笔记 - 服务器启动流程
+    </h1>
+  
+  
+  <div class="postShorten-meta post-meta">
+    
+      <time itemprop="datePublished" datetime="2019-01-11T00:00:00Z">
+        
+  January 11, 2019
+
+      </time>
+    
+    
+  
+  
+    <span>in</span>
+    
+      <a class="category-link" href="https://letianxhz.github.io/categories/skynet">skynet</a>
+    
+  
+
+  </div>
+
+</div>
+          
+          <div class="post-content markdown" itemprop="articleBody">
+            <div class="main-content-wrap">
+              <p>主要介绍下skynet在打包完成后，启动时内部的执行流程是怎样的，从底层C代码到上层lua是如何运转的。首先看Skynet_main.c的代码</p>
+
+  
+    
+  
+  
+    
+  
+  
+  
+
+
+<figure class="highlight c language-c">
+  <figcaption>
+    
+      <span>Skynet_main.c</span>
+    
+  </figcaption>
+  <table>
+    <tbody>
+      <tr>
+        <td class="gutter">
+          <pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre>
+        </td>
+        <td class="code">
+          <pre class="code-highlight language-c"><code class="c">int
+main(int argc, char *argv[]) {
+    // 获取传入的config配置文件
+	const char * config_file = NULL ;
+	if (argc &gt; 1) {
+		config_file = argv[1];
+	} else {
+		fprintf(stderr, &#34;Need a config file. Please read skynet wiki : https://github.com/cloudwu/skynet/wiki/Config\n&#34;
+			&#34;usage: skynet configfilename\n&#34;);
+		return 1;
+	}
+	luaS_initshr();
+	skynet_globalinit();
+	skynet_env_init();
+	.
+	.//省略部分代码
+	.
+	lua_close(L);
+	// 传入配置参数启动skynet的相关组件和线程
+	skynet_start(&amp;config);
+	skynet_globalexit();
+	luaS_exitshr();
+}</code></pre>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</figure>
+
+<p>上面的init()方法主要是加载配置是数据，以及启动lua的环境和服务，最后会将获取的配置文件传给skynte.start()函数处理，接下来看下该函数
+
+  
+    
+  
+  
+    
+  
+  
+  
+
+
+<figure class="highlight c language-c">
+  <figcaption>
+    
+      <span>Skynet_start.c</span>
+    
+  </figcaption>
+  <table>
+    <tbody>
+      <tr>
+        <td class="gutter">
+          <pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre>
+        </td>
+        <td class="code">
+          <pre class="code-highlight language-c"><code class="c">    void 
+skynet_start(struct skynet_config * config) {
+	// register SIGHUP for log file reopen
+	struct sigaction sa;
+	sa.sa_handler = &amp;handle_hup;
+	sa.sa_flags = SA_RESTART;
+	sigfillset(&amp;sa.sa_mask);
+	sigaction(SIGHUP, &amp;sa, NULL);
+	if (config-&gt;daemon) {
+	    // 初始化守护进程,可在配置文件中配置改参数
+		if (daemon_init(config-&gt;daemon)) {
+			exit(1);
+		}
+	}
+	// 初始化节点，只要在集群中转发节点的消息
+	skynet_harbor_init(config-&gt;harbor);
+	// 初始化句柄，给每个skynet,初始化handler_storage,里面存储了skynet_contxt的指针数组
+	skynet_handle_init(config-&gt;harbor);
+	// 初始化全局消息队列
+	skynet_mq_init();
+	// 初始化服务动态加载模块，在skynet_module.c中
+	skynet_module_init(config-&gt;module_path);
+	// 初始化定时器模块，在skynet_socket中
+	skynet_timer_init();
+	// 初始化socket网络模块
+	skynet_socket_init();
+	skynet_profile_enable(config-&gt;profile);
+	struct skynet_context *ctx = skynet_context_new(config-&gt;logservice, config-&gt;logger);
+	if (ctx == NULL) {
+		fprintf(stderr, &#34;Can&#39;t launch %s service\n&#34;, config-&gt;logservice);
+		exit(1);
+	}
+	skynet_handle_namehandle(skynet_context_handle(ctx), &#34;logger&#34;);
+    // 加载引导模块，主要在Skynet的配置文件中定义，其默认的是&#34;snlua bootstrap&#34;,表示去加载snlua.so库，然后在snlua中会启动
+    // bootstrap.lua脚本
+	bootstrap(ctx, config-&gt;bootstrap);
+    // 创建一个montior监视线程
+	start(config-&gt;thread);
+
+	// harbor_exit may call socket send, so it should exit before socket_free
+	skynet_harbor_exit();
+	skynet_socket_free();
+	if (config-&gt;daemon) {
+		daemon_exit(config-&gt;daemon);
+	}
+}</code></pre>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</figure></p>
+
+<p>在skynet.start()中主要是创建了一些核心模块，module, handle, harbor，网络，以及定时器，消息队列等,</p>
+
+<p>在调用bootstarp时会加载snlua.so模块并创建snlua服务，函数为skyne_context_new(snlua, bootsrap),snlua在初始化时会发送一个消息到到自己模块
+对应的skynet_context消息对列中,改消息就是&rdquo;bootstrap&rdquo;。回调函数launch_cd处理，在该函数中会把snlua又注销掉,接着执行init_cb()。</p>
+
+<p>
+  
+    
+  
+  
+    
+  
+  
+  
+
+
+<figure class="highlight c language-c">
+  <figcaption>
+    
+      <span>service_snlua.c</span>
+    
+  </figcaption>
+  <table>
+    <tbody>
+      <tr>
+        <td class="gutter">
+          <pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre>
+        </td>
+        <td class="code">
+          <pre class="code-highlight language-c"><code class="c">static int
+init_cb(struct snlua *l, struct skynet_context *ctx, const char * args, size_t sz) { //args 为 &#34;bootstrap&#34;
+	lua_State *L = l-&gt;L;
+	l-&gt;ctx = ctx;
+	lua_gc(L, LUA_GCSTOP, 0);
+	lua_pushboolean(L, 1);  /* signal for libraries to ignore env. vars. */
+	//设置注册表
+	lua_setfield(L, LUA_REGISTRYINDEX, &#34;LUA_NOENV&#34;);
+	luaL_openlibs(L);
+	lua_pushlightuserdata(L, ctx);
+	//设置元表 {skynet_context}
+	lua_setfield(L, LUA_REGISTRYINDEX, &#34;skynet_context&#34;);
+	
+	luaL_requiref(L, &#34;skynet.codecache&#34;, codecache , 0);
+	lua_pop(L,1);
+
+	const char *path = optstring(ctx, &#34;lua_path&#34;,&#34;./lualib/?.lua;./lualib/?/init.lua&#34;);
+	lua_pushstring(L, path);
+	//设置lua全局变量
+	lua_setglobal(L, &#34;LUA_PATH&#34;);
+	const char *cpath = optstring(ctx, &#34;lua_cpath&#34;,&#34;./luaclib/?.so&#34;);
+	lua_pushstring(L, cpath);
+	lua_setglobal(L, &#34;LUA_CPATH&#34;);
+	const char *service = optstring(ctx, &#34;luaservice&#34;, &#34;./service/?.lua&#34;);
+	lua_pushstring(L, service);
+	lua_setglobal(L, &#34;LUA_SERVICE&#34;);
+	const char *preload = skynet_command(ctx, &#34;GETENV&#34;, &#34;preload&#34;);
+	lua_pushstring(L, preload);
+	lua_setglobal(L, &#34;LUA_PRELOAD&#34;);
+
+	lua_pushcfunction(L, traceback);
+	assert(lua_gettop(L) == 1);
+    
+	const char * loader = optstring(ctx, &#34;lualoader&#34;, &#34;./lualib/loader.lua&#34;);
+    //启动了loader.lua
+	int r = luaL_loadfile(L,loader);
+	if (r != LUA_OK) {
+		skynet_error(ctx, &#34;Can&#39;t load %s : %s&#34;, loader, lua_tostring(L, -1));
+		report_launcher_error(ctx);
+		return 1;
+	}
+	lua_pushlstring(L, args, sz);
+	//将bootstrap传入执行loader
+	r = lua_pcall(L,1,0,1);
+	if (r != LUA_OK) {
+		skynet_error(ctx, &#34;lua loader error : %s&#34;, lua_tostring(L, -1));
+		report_launcher_error(ctx);
+		return 1;
+	}
+	lua_settop(L,0);
+	if (lua_getfield(L, LUA_REGISTRYINDEX, &#34;memlimit&#34;) == LUA_TNUMBER) {
+		size_t limit = lua_tointeger(L, -1);
+		l-&gt;mem_limit = limit;
+		skynet_error(ctx, &#34;Set memory limit to %.2f M&#34;, (float)limit / (1024 * 1024));
+		lua_pushnil(L);
+		lua_setfield(L, LUA_REGISTRYINDEX, &#34;memlimit&#34;);
+	}
+	lua_pop(L, 1);
+
+	lua_gc(L, LUA_GCRESTART, 0);
+
+	return 0;
+}</code></pre>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</figure>
+上面代码就是设置lua虚拟机变量后，就加载执行loader.lua,这时把要加载的文件&rdquo;&ldquo;Bootstrap&rdquo;传给他这时候执行流程就转到了lua层了,接下来就可以看
+bootstrap.lua的代码了</p>
+              
+            </div>
+          </div>
+          <div id="post-footer" class="post-footer main-content-wrap">
+            
+              
+                
+                
+                  <div class="post-footer-tags">
+                    <span class="text-color-light text-small">TAGGED IN</span><br/>
+                    
+  <a class="tag tag--primary tag--small" href="https://letianxhz.github.io/tags/skynet/">skynet</a>
+
+                  </div>
+                
+              
+            
+            <div class="post-actions-wrap">
+  
+      <nav >
+        <ul class="post-actions post-action-nav">
+          
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/" data-tooltip="java系统问题追踪定位技巧">
+              
+                  <i class="fa fa-angle-left"></i>
+                  <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+                </a>
+            </li>
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6/" data-tooltip="skynet 学习笔记 - 消息队列的实现机制">
+              
+                  <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+                  <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+          
+        </ul>
+      </nav>
+    <ul class="post-actions post-action-share" >
+      
+        <li class="post-action hide-lg hide-md hide-sm">
+          <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+            <i class="fa fa-share-alt"></i>
+          </a>
+        </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+              <i class="fa fa-facebook-official"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        
+      
+      
+        <li class="post-action">
+          <a class="post-action-btn btn btn--default" href="#disqus_thread">
+            <i class="fa fa-comment-o"></i>
+          </a>
+        </li>
+      
+      <li class="post-action">
+        
+          <a class="post-action-btn btn btn--default" href="#">
+        
+          <i class="fa fa-list"></i>
+        </a>
+      </li>
+    </ul>
+  
+</div>
+
+            
+              
+                <div id="disqus_thread">
+  <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+              
+            
+          </div>
+        </article>
+        <footer id="footer" class="main-content-wrap">
+  <span class="copyrights">
+    &copy; 2019 letianxhz. All Rights Reserved
+  </span>
+</footer>
+
+      </div>
+      <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+        <div class="post-actions-wrap">
+  
+      <nav >
+        <ul class="post-actions post-action-nav">
+          
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/" data-tooltip="java系统问题追踪定位技巧">
+              
+                  <i class="fa fa-angle-left"></i>
+                  <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+                </a>
+            </li>
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6/" data-tooltip="skynet 学习笔记 - 消息队列的实现机制">
+              
+                  <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+                  <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+          
+        </ul>
+      </nav>
+    <ul class="post-actions post-action-share" >
+      
+        <li class="post-action hide-lg hide-md hide-sm">
+          <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+            <i class="fa fa-share-alt"></i>
+          </a>
+        </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+              <i class="fa fa-facebook-official"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        
+      
+      
+        <li class="post-action">
+          <a class="post-action-btn btn btn--default" href="#disqus_thread">
+            <i class="fa fa-comment-o"></i>
+          </a>
+        </li>
+      
+      <li class="post-action">
+        
+          <a class="post-action-btn btn btn--default" href="#">
+        
+          <i class="fa fa-list"></i>
+        </a>
+      </li>
+    </ul>
+  
+</div>
+
+      </div>
+      <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+  <i id="btn-close-shareoptions" class="fa fa-close"></i>
+  <ul class="share-options">
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fletianxhz.github.io%2F2019%2F01%2Fskynet-%25E5%25AD%25A6%25E4%25B9%25A0%25E7%25AC%2594%25E8%25AE%25B0-%25E6%259C%258D%25E5%258A%25A1%25E5%2599%25A8%25E5%2590%25AF%25E5%258A%25A8%25E6%25B5%2581%25E7%25A8%258B%2F">
+          <i class="fa fa-facebook-official"></i><span>Share on Facebook</span>
+        </a>
+      </li>
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=https%3A%2F%2Fletianxhz.github.io%2F2019%2F01%2Fskynet-%25E5%25AD%25A6%25E4%25B9%25A0%25E7%25AC%2594%25E8%25AE%25B0-%25E6%259C%258D%25E5%258A%25A1%25E5%2599%25A8%25E5%2590%25AF%25E5%258A%25A8%25E6%25B5%2581%25E7%25A8%258B%2F">
+          <i class="fa fa-twitter"></i><span>Share on Twitter</span>
+        </a>
+      </li>
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=https%3A%2F%2Fletianxhz.github.io%2F2019%2F01%2Fskynet-%25E5%25AD%25A6%25E4%25B9%25A0%25E7%25AC%2594%25E8%25AE%25B0-%25E6%259C%258D%25E5%258A%25A1%25E5%2599%25A8%25E5%2590%25AF%25E5%258A%25A8%25E6%25B5%2581%25E7%25A8%258B%2F">
+          <i class="fa fa-google-plus"></i><span>Share on Google&#43;</span>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+<div id="share-options-mask" class="share-options-mask"></div>
+    </div>
+    
+    <div id="about">
+  <div id="about-card">
+    <div id="about-btn-close">
+      <i class="fa fa-remove"></i>
+    </div>
+    
+      <img id="about-card-picture" src="https://www.gravatar.com/avatar/a6eb338903793959156c1e468c1fd8be?s=110" alt="Author&#39;s picture" />
+    
+    <h4 id="about-card-name">letianxhz</h4>
+    
+      <div id="about-card-bio">一个小小的改变，往往会引起意料不到的效果</div>
+    
+    
+    
+      <div id="about-card-location">
+        <i class="fa fa-map-marker"></i>
+        <br/>
+        China
+      </div>
+    
+  </div>
+</div>
+
+    <div id="algolia-search-modal" class="modal-container">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="close-button"><i class="fa fa-close"></i></span>
+      <a href="https://algolia.com" target="_blank" rel="noopener" class="searchby-algolia text-color-light link-unstyled">
+        <span class="searchby-algolia-text text-color-light text-small">by</span>
+        <img class="searchby-algolia-logo" src="https://www.algolia.com/static_assets/images/press/downloads/algolia-light.svg">
+      </a>
+      <i class="search-icon fa fa-search"></i>
+      <form id="algolia-search-form">
+        <input type="text" id="algolia-search-input" name="search"
+          class="form-control input--large search-input" placeholder="Search" />
+      </form>
+    </div>
+    <div class="modal-body">
+      <div class="no-result text-color-light text-center">no post found</div>
+      <div class="results">
+        
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2019/02/java%E7%B3%BB%E7%BB%9F%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA%E5%AE%9A%E4%BD%8D%E6%8A%80%E5%B7%A7/">
+                <h3 class="media-heading">java系统问题追踪定位技巧</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Feb 2, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p><code>定位系统层面问题</code>的常用方法。</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
+                <h3 class="media-heading">skynet 学习笔记 - 服务器启动流程</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>主要介绍下skynet在打包完成后，启动时内部的执行流程是怎样的，从底层C代码到上层lua是如何运转的。首先看Skynet_main.c的代码</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6/">
+                <h3 class="media-heading">skynet 学习笔记 - 消息队列的实现机制</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>skynet是一个基于C跟lua的开源服务端并发框架，实现了Actor模型，
+gate是模板lualib/snax/gateserver.lua使用范例，系统自带的，位于service/gate.lua，是一个实现完整的网关服务器。</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2019/01/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/">
+                <h3 class="media-heading">skynet 学习笔记 - 源码学习</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 2019
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">skynet是一个基于C跟lua的开源服务端并发框架，实现了Actor模型， gate是模板lualib/snax/gateserver.lua使用范例，系统自带的，位于service/gate.lua，是一个实现完整的网关服务器。</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/06/welcome-to-tranquilpeak-0.4.4-beta/">
+                <h3 class="media-heading">Welcome to Tranquilpeak 0.4.4-BETA</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jun 6, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Tranquilpeak is a gorgeous responsive theme for Hugo blog framework. It has many features and integrated services to improve user experience.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/06/who-is-using-tranquilpeak-hugo-theme/">
+                <h3 class="media-heading">Who&#39;s using Tranquilpeak Hugo Theme</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jun 6, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Here you can find a list of the blogs that use Tranquilpeak theme, with different styles and customizations.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/05/elements-showcase/">
+                <h3 class="media-heading">Elements showcase</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  May 5, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Check out how Tranquilpeak theme display well HTML elements (title, paragraph, blockquote, table and more..). It&rsquo;s simple and elegant.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/05/cover-image-showcase/">
+                <h3 class="media-heading">Cover image showcase</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  May 5, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Tranquilpeak integrate a unique &ldquo;cover image&rdquo; feature. Open this post to see how this feature sublimate your article.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2015/03/highlighted-code-showcase/">
+                <h3 class="media-heading">highlighted code showcase</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Mar 3, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Tranquilpeak Hugo theme have its own theme to highlight source code. It&rsquo;s based on GitHub theme: simple and elegant. Check out how it sublimate source codes.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="https://letianxhz.github.io/2014/10/tags-plugins-showcase/">
+                <h3 class="media-heading">Tags plugins showcase</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Oct 10, 2014
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>This post is used to show how tag plugins are displayed. See <a href="https://github.com/kakawait/hugo-tranquilpeak-theme/blob/master/docs/user.md#tags">docs</a> for more info.</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+      </div>
+    </div>
+    <div class="modal-footer">
+      <p class="results-count text-medium"
+         data-message-zero="no post found"
+         data-message-one="1 post found"
+         data-message-other="{n} posts found">
+         16 posts found
+      </p>
+    </div>
+  </div>
+</div>
+    
+  
+    
+    <div id="cover" style="background-image:url('https://letianxhz.github.io/images/cover.jpg');"></div>
+  
+
+
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.7/js/jquery.fancybox.min.js" integrity="sha256-GEAnjcTqVP+vBp3SSc8bEDQqvWAZMiHyUSIorrWwH50=" crossorigin="anonymous"></script>
+
+
+<script src="https://letianxhz.github.io/js/script-qi9wbxp2ya2j6p7wx1i6tgavftewndznf4v0hy2gvivk1rxgc3lm7njqb6bz.min.js"></script>
+
+
+<script lang="javascript">
+window.onload = updateMinWidth;
+window.onresize = updateMinWidth;
+document.getElementById("sidebar").addEventListener("transitionend", updateMinWidth);
+function updateMinWidth() {
+  var sidebar = document.getElementById("sidebar");
+  var main = document.getElementById("main");
+  main.style.minWidth = "";
+  var w1 = getComputedStyle(main).getPropertyValue("min-width");
+  var w2 = getComputedStyle(sidebar).getPropertyValue("width");
+  var w3 = getComputedStyle(sidebar).getPropertyValue("left");
+  main.style.minWidth = `calc(${w1} - ${w2} - ${w3})`;
+}
+</script>
+
+<script>
+$(document).ready(function() {
+  hljs.configure({ classPrefix: '', useBR: false });
+  $('pre.code-highlight > code, pre > code').each(function(i, block) {
+    if (!$(this).hasClass('codeblock')) {
+      $(this).addClass('codeblock');
+    }
+    hljs.highlightBlock(block);
+  });
+});
+</script>
+
+
+  
+    
+      <script>
+        var disqus_config = function () {
+          this.page.url = 'https:\/\/letianxhz.github.io\/2019\/01\/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B\/';
+          
+            this.page.identifier = '\/2019\/01\/skynet-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B\/'
+          
+        };
+        (function() {
+          
+          
+          if (window.location.hostname == "localhost") {
+            return;
+          }
+          var d = document, s = d.createElement('script');
+          var disqus_shortname = 'hugo-tranquilpeak-theme';
+          s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+        })();
+      </script>
+    
+  
+
+
+
+
+    
+  </body>
+</html>
+
